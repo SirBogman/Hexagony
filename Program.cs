@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -14,6 +15,17 @@ namespace Hexagony
     {
         private static async Task<int> Main(string[] args)
         {
+            // Directly output characters up to and including 255 as bytes, without modifying them.
+            // This allows UTF-8 encoded text to be output one byte at a time.
+            Console.OutputEncoding = Encoding.GetEncoding("iso-8859-1");
+            var bytes = Enumerable.Range(0, 256).Select(x => (byte)x).ToArray();
+            var encodedBytes = Console.OutputEncoding
+                .GetBytes(bytes.Select(x => (char)x).ToArray());
+            if (!bytes.SequenceEqual(encodedBytes))
+            {
+                throw new InvalidOperationException("Encoding error.");
+            }
+
             var rootCommand = new RootCommand
             {
                 new Option<int>(
