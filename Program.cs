@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
@@ -91,14 +92,14 @@ namespace Hexagony
                 code = await stream.ReadToEndAsync();
             }
 
-            var input = options.Arguments?.Length > 0 ?
-                string.Join('\0', options.Arguments) :
+            await using var inputStream = options.Arguments?.Length > 0 ?
+                new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\0', options.Arguments))) :
                 !stdinCode ?
-                    await Console.In.ReadToEndAsync() :
-                    "";
+                    Console.OpenStandardInput() :
+                    new MemoryStream(new byte[0]);
 
             var debugLevel = options.DebugAll ? 2 : options.Debug ? 1 : 0;
-            var environment = new HexagonyEnv(code, input, debugLevel);
+            var environment = new HexagonyEnv(code, inputStream, debugLevel);
 
             try
             {

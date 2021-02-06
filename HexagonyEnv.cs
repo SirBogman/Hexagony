@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Numerics;
 using System.Text;
 using RT.Util;
-using RT.Util.ExtensionMethods;
 
 namespace Hexagony
 {
@@ -14,16 +13,16 @@ namespace Hexagony
         private readonly Grid _grid;
         private readonly PointAxial[] _ips;
         private readonly Direction[] _ipDirs;
-        private readonly byte[] _input;
+        private readonly Stream _inputStream;
+        private readonly int _debugLevel;
         private int _activeIp;
-        private int _inputIndex;
         private int _tick;
-        private int _debugLevel;
+        private int? _nextByte;
 
-        public HexagonyEnv(string source, string input, int debugLevel)
+        public HexagonyEnv(string source, Stream inputStream, int debugLevel)
         {
             _grid = Grid.Parse(source);
-            _input = input.ToUtf8();
+            _inputStream = inputStream;
             _debugLevel = debugLevel;
             _ips = Ut.NewArray(
                 new PointAxial(0, -_grid.Size + 1),
@@ -67,10 +66,10 @@ namespace Hexagony
 
                 if (debugTick)
                 {
-                    OutputDebugInfo();
+                    OutputDebugInfo(opcode);
                     if (opcode.Value == '@')
                     {
-                        OutputDebugString(_memory.ToDebugString());
+                        OutputDebugLine(_memory.ToDebugString());
                     }
                 }
 
@@ -127,13 +126,7 @@ namespace Hexagony
 
                     // I/O
                     case ',':
-                        if (_inputIndex >= _input.Length)
-                            _memory.Set(BigInteger.MinusOne);
-                        else
-                        {
-                            _memory.Set(_input[_inputIndex]);
-                            _inputIndex++;
-                        }
+                        _memory.Set(ReadByte());
                         break;
 
                     case ';':
@@ -175,8 +168,8 @@ namespace Hexagony
 
                 if (debugTick)
                 {
-                    OutputDebugString($"New direction: {Dir}");
-                    OutputDebugString(_memory.ToDebugString());
+                    OutputDebugLine($"New direction: {Dir}");
+                    OutputDebugLine(_memory.ToDebugString());
                 }
 
                 _ips[_activeIp] += Dir.Vector;
@@ -188,26 +181,46 @@ namespace Hexagony
 
         private BigInteger FindInteger()
         {
-            var chs = "0123456789+-".Select(c => (byte) c).ToArray();
-            while (_inputIndex < _input.Length && !chs.Contains(_input[_inputIndex]))
-                _inputIndex++;
-            if (_inputIndex == _input.Length)
-                return BigInteger.Zero;
-            var sb = new StringBuilder();
-            if (_input[_inputIndex] == '-' || _input[_inputIndex] == '+')
+            var value = BigInteger.Zero;
+            var positive = true;
+
+            while (true)
             {
-                if (_input[_inputIndex] == '-')
-                    sb.Append('-');
-                _inputIndex++;
+                var byteValue = ReadByte();
+                switch (byteValue)
+                {
+                    case '+':
+                        break;
+                    case '-':
+                        positive = false;
+                        break;
+                    // ReSharper disable once PatternAlwaysMatches
+                    case int x when x >= '0' && x <= '9':
+                    case -1:
+                        _nextByte = byteValue;
+                        break;
+                    default:
+                        continue;
+                }
+                break;
             }
-            if (_inputIndex == _input.Length)
-                return BigInteger.Zero;
-            while (_inputIndex < _input.Length && _input[_inputIndex] >= '0' && _input[_inputIndex] <= '9')
+
+            while (true)
             {
-                sb.Append((char) _input[_inputIndex]);
-                _inputIndex++;
+                var byteValue = ReadByte();
+                if (byteValue >= '0' && byteValue <= '9')
+                {
+                    value = value * 10 + (byteValue - '0');
+                }
+                else
+                {
+                    // Don't consume this character.
+                    _nextByte = byteValue;
+                    break;
+                }
             }
-            return BigInteger.Parse(sb.ToString());
+
+            return positive ? value : -value;
         }
 
         private void HandleEdges()
@@ -259,20 +272,33 @@ namespace Hexagony
         private void AppendOutput(string output) =>
             Console.Write(output);
 
-        private void OutputDebugString(string output) =>
+        private void OutputDebugLine(string output) =>
             Console.Error.WriteLine(output);
 
-        private void OutputDebugInfo()
+        private void OutputDebugInfo(Rune command)
         {
-            OutputDebugString($"Tick {_tick}");
-            OutputDebugString(_grid.ToDebugString());
+            OutputDebugLine("");
+            OutputDebugLine($"Tick {_tick}");
+            OutputDebugLine(_grid.ToDebugString());
             var i = 0;
             foreach (var (q, r) in _ips)
             {
                 var active = _activeIp == i ? " (active)" : null;
-                OutputDebugString($"IP #{i}: (Q: {q,3}, R: {r,3}, Dir: {_ipDirs[i],2}){active}");
+                OutputDebugLine($"IP #{i}: (Q: {q,3}, R: {r,3}, Dir: {_ipDirs[i],2}){active}");
                 i++;
             }
+            OutputDebugLine($"Command: {command}");
+        }
+
+        /// <summary>
+        /// Reads one byte from input. Returns -1 if there is no more input.
+        /// </summary>
+        /// <returns></returns>
+        private int ReadByte()
+        {
+            var result = _nextByte ?? _inputStream.ReadByte();
+            _nextByte = null;
+            return result;
         }
     }
 }
