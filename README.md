@@ -1,3 +1,3 @@
-Interpreter for the [Hexagony](http://esolangs.org/wiki/Hexagony) programming language.
+Fast command-line interpreter for the [Hexagony](https://esolangs.org/wiki/Hexagony) programming language.
 
-Based on the [Esoteric IDE](https://github.com/Timwi/EsotericIDE).
+Check out [hexagony.net](https://hexagony.net/), the online IDE.

@@ -52,12 +52,12 @@ namespace Hexagony
                 }
                 else if (dir is East)
                 {
-                    mp = cw ? new PointAxial(mp.Q, mp.R + 1) : new PointAxial(mp.Q, mp.R);
+                    mp = cw ? new PointAxial(mp.Q, mp.R + 1) : mp;
                     dir = Direction.NorthEast;
                 }
                 else if (dir is SouthEast)
                 {
-                    mp = cw ? new PointAxial(mp.Q - 1, mp.R + 1) : new PointAxial(mp.Q, mp.R);
+                    mp = cw ? new PointAxial(mp.Q - 1, mp.R + 1) : mp;
                     dir = Direction.East;
                 }
 
@@ -75,12 +75,12 @@ namespace Hexagony
 
                 if (dir is NorthEast)
                 {
-                    mp = cw ? new PointAxial(mp.Q, mp.R) : new PointAxial(mp.Q, mp.R - 1);
+                    mp = cw ? mp : new PointAxial(mp.Q, mp.R - 1);
                     dir = Direction.East;
                 }
                 else if (dir is East)
                 {
-                    mp = cw ? new PointAxial(mp.Q, mp.R) : new PointAxial(mp.Q + 1, mp.R - 1);
+                    mp = cw ? mp : new PointAxial(mp.Q + 1, mp.R - 1);
                     dir = Direction.SouthEast;
                 }
                 else if (dir is SouthEast)

@@ -11,9 +11,6 @@ namespace Hexagony
         public static readonly Direction NorthWest = new NorthWest();
         public static readonly Direction NorthEast = new NorthEast();
 
-        public abstract Direction TurnRight { get; }
-        public abstract Direction TurnLeft { get; }
-
         public abstract Direction ReflectAtSlash { get; }
         public abstract Direction ReflectAtBackslash { get; }
         public abstract Direction ReflectAtUnderscore { get; }
@@ -21,11 +18,10 @@ namespace Hexagony
         public abstract Direction ReflectAtLessThan(bool positive);
         public abstract Direction ReflectAtGreaterThan(bool positive);
 
-        public abstract Direction Reverse { get; }
         public abstract PointAxial Vector { get; }
 
         public abstract bool Equals(Direction other);
-        public override bool Equals(object obj) => obj is Direction && Equals((Direction) obj);
+        public override bool Equals(object obj) => obj is Direction other && Equals(other);
         public static bool operator ==(Direction a, Direction b) => a is not null && a.Equals(b);
         public static bool operator !=(Direction a, Direction b) => a is not null && !a.Equals(b);
         public abstract override int GetHashCode();
@@ -33,10 +29,6 @@ namespace Hexagony
 
     sealed class NorthEast : Direction
     {
-        public override Direction TurnRight => East;
-
-        public override Direction TurnLeft => NorthWest;
-
         public override Direction ReflectAtSlash => NorthEast;
 
         public override Direction ReflectAtBackslash => West;
@@ -48,8 +40,6 @@ namespace Hexagony
         public override Direction ReflectAtLessThan(bool positive) => SouthWest;
         public override Direction ReflectAtGreaterThan(bool positive) => East;
 
-        public override Direction Reverse => SouthWest;
-
         public override PointAxial Vector => new(1, -1);
 
         public override int GetHashCode() => 245;
@@ -59,10 +49,6 @@ namespace Hexagony
 
     sealed class NorthWest : Direction
     {
-        public override Direction TurnRight => NorthEast;
-
-        public override Direction TurnLeft => West;
-
         public override Direction ReflectAtSlash => East;
 
         public override Direction ReflectAtBackslash => NorthWest;
@@ -74,8 +60,6 @@ namespace Hexagony
         public override Direction ReflectAtLessThan(bool positive) => West;
         public override Direction ReflectAtGreaterThan(bool positive) => SouthEast;
 
-        public override Direction Reverse => SouthEast;
-
         public override PointAxial Vector => new(0, -1);
 
         public override int GetHashCode() => 2456;
@@ -85,10 +69,6 @@ namespace Hexagony
 
     sealed class West : Direction
     {
-        public override Direction TurnRight => NorthWest;
-
-        public override Direction TurnLeft => SouthWest;
-
         public override Direction ReflectAtSlash => SouthEast;
 
         public override Direction ReflectAtBackslash => NorthEast;
@@ -100,8 +80,6 @@ namespace Hexagony
         public override Direction ReflectAtLessThan(bool positive) => East;
         public override Direction ReflectAtGreaterThan(bool positive) => positive ? NorthWest : SouthWest;
 
-        public override Direction Reverse => East;
-
         public override PointAxial Vector => new(-1, 0);
 
         public override int GetHashCode() => 24567;
@@ -111,10 +89,6 @@ namespace Hexagony
 
     sealed class SouthWest : Direction
     {
-        public override Direction TurnRight => West;
-
-        public override Direction TurnLeft => SouthEast;
-
         public override Direction ReflectAtSlash => SouthWest;
 
         public override Direction ReflectAtBackslash => East;
@@ -126,8 +100,6 @@ namespace Hexagony
         public override Direction ReflectAtLessThan(bool positive) => West;
         public override Direction ReflectAtGreaterThan(bool positive) => NorthEast;
 
-        public override Direction Reverse => NorthEast;
-
         public override PointAxial Vector => new(-1, 1);
 
         public override int GetHashCode() => 245678;
@@ -137,10 +109,6 @@ namespace Hexagony
 
     sealed class SouthEast : Direction
     {
-        public override Direction TurnRight => SouthWest;
-
-        public override Direction TurnLeft => East;
-
         public override Direction ReflectAtSlash => West;
 
         public override Direction ReflectAtBackslash => SouthEast;
@@ -152,8 +120,6 @@ namespace Hexagony
         public override Direction ReflectAtLessThan(bool positive) => NorthWest;
         public override Direction ReflectAtGreaterThan(bool positive) => East;
 
-        public override Direction Reverse => NorthWest;
-
         public override PointAxial Vector => new(0, 1);
 
         public override int GetHashCode() => 2456783;
@@ -163,10 +129,6 @@ namespace Hexagony
 
     sealed class East : Direction
     {
-        public override Direction TurnRight => SouthEast;
-
-        public override Direction TurnLeft => NorthEast;
-
         public override Direction ReflectAtSlash => NorthWest;
 
         public override Direction ReflectAtBackslash => SouthWest;
@@ -177,8 +139,6 @@ namespace Hexagony
 
         public override Direction ReflectAtLessThan(bool positive) => positive ? SouthEast : NorthEast;
         public override Direction ReflectAtGreaterThan(bool positive) => West;
-
-        public override Direction Reverse => West;
 
         public override PointAxial Vector => new(1, 0);
 
