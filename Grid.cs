@@ -50,8 +50,10 @@ namespace Hexagony
                 {
                     case ' ':
                     case '\t':
-                    case '\r':
                     case '\n':
+                    case '\v':
+                    case '\f':
+                    case '\r':
                         // Ignore specific whitespace chars.
                         continue;
                     case '`':
