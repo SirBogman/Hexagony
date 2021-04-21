@@ -130,7 +130,7 @@ namespace Hexagony
                         break;
 
                     case ';':
-                        AppendOutput((char)(_memory.Get() % 256));
+                        AppendOutput((char)(((int)(_memory.Get() % 256) + 256) % 256));
                         break;
 
                     case '?':
