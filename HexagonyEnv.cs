@@ -93,8 +93,7 @@ namespace Hexagony
                     case '%':
                         var leftVal = _memory.GetLeft();
                         var rightVal = _memory.GetRight();
-                        BigInteger rem;
-                        var div = BigInteger.DivRem(leftVal, rightVal, out rem);
+                        var div = BigInteger.DivRem(leftVal, rightVal, out var rem);
                         // The semantics of integer division and modulo are different in Hexagony because the
                         // reference interpreter was written in Ruby. Account for this discrepancy.
                         if (rem != 0 && leftVal < 0 ^ rightVal < 0)
@@ -118,10 +117,7 @@ namespace Hexagony
                             _memory.MoveLeft();
                         break;
                     case '&':
-                        if (_memory.Get() > 0)
-                            _memory.Set(_memory.GetRight());
-                        else
-                            _memory.Set(_memory.GetLeft());
+                        _memory.Set(_memory.Get() > 0 ? _memory.GetRight() : _memory.GetLeft());
                         break;
 
                     // I/O
@@ -150,12 +146,12 @@ namespace Hexagony
                     case '>': _ipDirs[_activeIp] = Dir.ReflectAtGreaterThan(_memory.Get() > 0); break;
                     case ']': newIp = (_activeIp + 1) % 6; break;
                     case '[': newIp = (_activeIp + 5) % 6; break;
-                    case '#': newIp = ((int) (_memory.Get() % 6) + 6) % 6; break;
+                    case '#': newIp = ((int)(_memory.Get() % 6) + 6) % 6; break;
                     case '$': _ips[_activeIp] += Dir.Vector; HandleEdges(); break;
 
                     // Digits, letters, and other characters.
                     default:
-                        if (opcode.Value >= '0' && opcode.Value <= '9')
+                        if (opcode.Value is >= '0' and <= '9')
                         {
                             var opVal = opcode.Value - '0';
                             var memVal = _memory.Get();
@@ -194,8 +190,7 @@ namespace Hexagony
                     case '-':
                         positive = false;
                         break;
-                    // ReSharper disable once PatternAlwaysMatches
-                    case int x when x >= '0' && x <= '9':
+                    case >= '0' and <= '9':
                     case -1:
                         _nextByte = byteValue;
                         break;
@@ -208,7 +203,7 @@ namespace Hexagony
             while (true)
             {
                 var byteValue = ReadByte();
-                if (byteValue >= '0' && byteValue <= '9')
+                if (byteValue is >= '0' and <= '9')
                 {
                     value = value * 10 + (byteValue - '0');
                 }
