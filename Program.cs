@@ -105,7 +105,7 @@ namespace Hexagony
             }
 
             await using var inputStream = options.Arguments?.Length > 0 ?
-                new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\0', options.Arguments))) :
+                new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\0', options.Arguments) + "\0")) :
                 !stdinCode ?
                     Console.OpenStandardInput() :
                     new MemoryStream(new byte[0]);
