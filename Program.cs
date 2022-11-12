@@ -7,7 +7,6 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Hexagony
 {
@@ -26,55 +25,67 @@ namespace Hexagony
                 throw new InvalidOperationException("Encoding error.");
             }
 
-            var rootCommand = new RootCommand
-            {
-                new Option<int>(
-                    new[] { "-g", "--generate" },
-                    "Generate a hexagon with the given size."),
-                new Option<bool>(
-                    new[] { "-d", "--debug" },
-                    "Output debug information to STDERR for instructions preceded by \"`\"."),
-                new Option<bool>(
-                    new[] { "-D", "--debug-all" },
-                    "Output debug information to STDERR after every tick."),
-            };
+            var generateOption = new Option<int>(
+                new[] { "-g", "--generate" },
+                "Generate a hexagon with the given size.");
 
-            rootCommand.AddArgument(new Argument 
+            var debugOption = new Option<bool>(
+                new[] { "-d", "--debug" },
+                "Output debug information to STDERR for instructions preceded by \"`\".");
+
+            var debugAllOption = new Option<bool>(
+                new[] { "-D", "--debug-all" },
+                "Output debug information to STDERR after every tick.");
+
+            var fileArgument = new Argument<FileInfo>
             {
                 Name = "File",
-                ArgumentType = typeof(FileInfo),
                 Arity = ArgumentArity.ZeroOrOne,
                 Description = "Path to code file. Use \"-\" for STDIN.",
-            });
+            };
 
-            rootCommand.AddArgument(new Argument 
+            var argumentsArgument = new Argument<string[]>
             {
                 Name = "Arguments",
-                ArgumentType = typeof(string),
                 Arity = ArgumentArity.ZeroOrMore,
                 Description = "Optional arguments for program that will be joined with null characters. Otherwise, if STDIN is not used for the code file, it will be used for input.",
-            });
+            };
+
+            var rootCommand = new RootCommand
+            {
+                generateOption,
+                debugOption,
+                debugAllOption,
+                fileArgument,
+                argumentsArgument,
+            };
 
             rootCommand.Description = "Hexagony interpreter";
 
-            // Note that the parameters of the handler method are matched according to the names of the options.
-            rootCommand.Handler = CommandHandler.Create<CommandLineOptions>(MainTask);
+            rootCommand.SetHandler(async (context) =>
+                await MainTask(new CommandLineOptions
+                {
+                    Generate = context.ParseResult.GetValueForOption(generateOption),
+                    Debug = context.ParseResult.GetValueForOption(debugOption),
+                    DebugAll = context.ParseResult.GetValueForOption(debugAllOption),
+                    File = context.ParseResult.GetValueForArgument(fileArgument),
+                    Arguments = context.ParseResult.GetValueForArgument(argumentsArgument),
+                }));
 
             return await rootCommand.InvokeAsync(args);
         }
 
-        [UsedImplicitly]
         private class CommandLineOptions
         {
-            public int Generate { get; [UsedImplicitly] set; }
-            
-            public string[]? Arguments { get; [UsedImplicitly] set; }
-            
-            public FileInfo? File { get; [UsedImplicitly] set; }
+            public int Generate { get; set; }
 
-            public bool Debug { get; [UsedImplicitly] set; }
+            public string[] Arguments { get; set; } = Array.Empty<string>();
             
-            public bool DebugAll { get; [UsedImplicitly] set; }
+            public FileInfo? File { get; set; }
+
+            public bool Debug { get; set; }
+            
+            public bool DebugAll { get; set; }
         }
 
         private static async Task<int> MainTask(CommandLineOptions options)
@@ -104,7 +115,7 @@ namespace Hexagony
                 code = await stream.ReadToEndAsync();
             }
 
-            await using var inputStream = options.Arguments?.Length > 0 ?
+            await using var inputStream = options.Arguments.Length > 0 ?
                 new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\0', options.Arguments) + "\0")) :
                 !stdinCode ?
                     Console.OpenStandardInput() :
